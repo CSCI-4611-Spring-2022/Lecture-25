@@ -9,7 +9,6 @@ export class RaycastApp extends gfx.GraphicsApp
     private marker: gfx.SphereMesh;
 
     private testMesh: gfx.Mesh;
-    private testMeshBounds: gfx.MeshInstance;
 
     constructor()
     {
@@ -22,7 +21,6 @@ export class RaycastApp extends gfx.GraphicsApp
         this.marker = new gfx.SphereMesh(0.05);
 
         this.testMesh = gfx.ObjLoader.load('./assets/bunny.obj');
-        this.testMeshBounds = new gfx.MeshInstance(this.testMesh);
     }
 
     createScene(): void 
@@ -57,9 +55,6 @@ export class RaycastApp extends gfx.GraphicsApp
         //this.testMesh.translateY(1);
         //this.testMesh.rotation.setRotationY(-Math.PI / 2)
         this.scene.add(this.testMesh);
-
-        this.testMeshBounds.material = new gfx.BoundingVolumeMaterial(gfx.BoundingVolumeMode.BOX);
-        this.testMesh.add(this.testMeshBounds);
 
         const lineMaterial = new gfx.UnlitMaterial();
         lineMaterial.color.set(1, 0, 1);
