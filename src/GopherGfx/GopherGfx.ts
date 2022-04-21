@@ -36,6 +36,7 @@ export * from './materials/Texture'
 export * from './materials/GouraudMaterial'
 export * from './materials/WireframeMaterial'
 export * from './materials/UnlitMaterial'
+export * from './materials/BoundingVolumeMaterial'
 
 export * from './loaders/StringParser'
 export * from './loaders/ObjLoader'

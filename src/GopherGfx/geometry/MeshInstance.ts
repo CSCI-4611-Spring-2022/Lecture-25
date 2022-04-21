@@ -35,8 +35,6 @@ export class MeshInstance extends Transform
 
     postRender(): void
     {
-        this.baseMesh.postRender();
-        
         this.children.forEach((elem : Transform) => {
             elem.postRender();
         });

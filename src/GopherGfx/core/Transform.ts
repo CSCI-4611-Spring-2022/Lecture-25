@@ -12,6 +12,7 @@ export class Transform
     public rotation: Quaternion;
     public scale: Vector3;
     public visible: boolean;
+    public matrixAutoUpdate: boolean;
 
     protected matrix: Matrix4;
     protected worldMatrix: Matrix4;
@@ -23,6 +24,7 @@ export class Transform
         this.rotation = new Quaternion();
         this.scale = new Vector3(1, 1, 1);
         this.visible = true;
+        this.matrixAutoUpdate = true;
 
         this.matrix = new Matrix4();
         this.worldMatrix = new Matrix4();
@@ -47,10 +49,13 @@ export class Transform
 
     computeWorldTransform(parent: Transform): void
     {
-        this.matrix.makeTransform(this.position, this.rotation, this.scale);
-        
-        this.worldMatrix.copy(parent.worldMatrix);
-        this.worldMatrix.multiply(this.matrix);
+        if(this.matrixAutoUpdate)
+        {
+            this.matrix.makeTransform(this.position, this.rotation, this.scale);
+            
+            this.worldMatrix.copy(parent.worldMatrix);
+            this.worldMatrix.multiply(this.matrix);
+        }
 
         this.children.forEach((elem : Transform) => {
             elem.computeWorldTransform(this);
@@ -119,5 +124,15 @@ export class Transform
     getLocalMatrix(): Matrix4
     {
         return this.matrix;
+    }
+
+    setWorldMatrix(matrix: Matrix4): void
+    {
+        this.worldMatrix.copy(matrix);
+    }
+
+    setLocalMatrix(matrix: Matrix4): void
+    {
+        this.matrix.copy(matrix);
     }
 }

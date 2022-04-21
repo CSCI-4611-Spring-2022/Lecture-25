@@ -2,9 +2,10 @@ import { Ray } from '../math/Ray'
 import { Plane } from '../math/Plane'
 import { Box } from '../math/Box'
 import { Sphere } from '../math/Sphere'
-import { Camera } from './Camera'
 import { Vector2 } from '../math/Vector2';
 import { Vector3 } from '../math/Vector3';
+import { Camera } from './Camera'
+import { Mesh } from '../geometry/Mesh'
 
 export class Raycaster
 {
@@ -133,5 +134,15 @@ export class Raycaster
         const intersectionPoint = Vector3.multiplyScalar(this.ray.direction, tmin);
         intersectionPoint.add(this.ray.origin);
         return intersectionPoint;
+    }
+
+    intersectsMeshBoundingBox(mesh: Mesh): Vector3 | null
+    {
+        return null;
+    }
+
+    intersectsMeshBoundingSphere(mesh: Mesh): Vector3 | null
+    {
+        return null;
     }
 }

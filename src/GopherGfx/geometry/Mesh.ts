@@ -7,6 +7,8 @@ import { GouraudMaterial } from "../materials/GouraudMaterial";
 import { Camera } from "../core/Camera";
 import { LightManager } from "../lights/LightManager";
 import { GraphicsApp } from "../core/GraphicsApp";
+import { Box } from "../math/Box";
+import { Sphere } from "../math/Sphere"
 
 export class Mesh extends Transform
 {
@@ -28,6 +30,9 @@ export class Mesh extends Transform
     public triangleCount: number;
 
     public material: Material;
+
+    public boundingBox: Box;
+    public boundingSphere: Sphere;
     
     constructor()
     {
@@ -50,6 +55,9 @@ export class Mesh extends Transform
 
         // default material
         this.material = new GouraudMaterial();
+
+        this.boundingBox = new Box();
+        this.boundingSphere = new Sphere();
     }
 
     draw(parent: Transform, camera: Camera, lightManager: LightManager) : void
@@ -82,24 +90,27 @@ export class Mesh extends Transform
         {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
 
+            let vArray: number[];
             if(typeof vertices[0] === 'number')
             {
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices as number[]), this.gl.DYNAMIC_DRAW);
-                this.vertexCount = vertices.length / 3;
+                vArray = vertices as number[];
+                
             }
             else
             {
-                const vArray : number[] = [];
+                vArray = [];
                 (vertices as Vector3[]).forEach((elem : Vector3) =>
                 {
                     vArray.push(elem.x, elem.y, elem.z);
                 });
-                
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vArray), this.gl.DYNAMIC_DRAW);
-                this.vertexCount = vertices.length;
             }
+            
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vArray), this.gl.DYNAMIC_DRAW);
+            this.vertexCount = vArray.length / 3;
 
-            this.positionBufferDirty = true;
+            this.computeBounds(vertices);
+             
+            this.positionBufferDirty = true;     
         }
     }
 
@@ -284,5 +295,95 @@ export class Mesh extends Transform
             colors.push(1, 1, 1, 1);
 
         this.setColors(colors);
+    }
+
+    public computeBounds(vertices : Vector3[] | number[] | null): void
+    {
+        if(!vertices)
+        {
+            vertices = this.getArrayBuffer(this.positionBuffer);
+        } 
+        
+        if(vertices.length == 0)
+            return;
+
+        if(typeof vertices[0] === 'number')
+        {
+            const vArray = vertices as number[];
+
+            this.boundingBox.max.set(vArray[0], vArray[1], vArray[2]);
+            this.boundingBox.min.set(vArray[0], vArray[1], vArray[2]);
+            
+            for(let i=0; i < vArray.length; i+=3)
+            {
+                if(vArray[i] > this.boundingBox.max.x)
+                    this.boundingBox.max.x = vArray[i];
+                if(vArray[i] < this.boundingBox.min.x)
+                    this.boundingBox.min.x = vArray[i];
+
+                if(vArray[i+1] > this.boundingBox.max.y)
+                    this.boundingBox.max.y = vArray[i+1];
+                if(vArray[i+1] < this.boundingBox.min.y)
+                    this.boundingBox.min.y = vArray[i+1];
+
+                if(vArray[i+2] > this.boundingBox.max.z)
+                    this.boundingBox.max.z = vArray[i+2];
+                if(vArray[i+2] < this.boundingBox.min.z)
+                    this.boundingBox.min.z = vArray[i+2];    
+            }
+        }
+        else
+        {
+            this.boundingBox.max.copy((vertices as Vector3[])[0]);
+            this.boundingBox.min.copy((vertices as Vector3[])[0]);
+
+            (vertices as Vector3[]).forEach((elem : Vector3) =>
+            {
+                if(elem.x > this.boundingBox.max.x)
+                    this.boundingBox.max.x = elem.x;
+                if(elem.x < this.boundingBox.min.x)
+                    this.boundingBox.min.x = elem.x;
+
+                if(elem.y > this.boundingBox.max.y)
+                    this.boundingBox.max.y = elem.y;
+                if(elem.y < this.boundingBox.min.y)
+                    this.boundingBox.min.y =elem.y;
+
+                if(elem.z > this.boundingBox.max.z)
+                    this.boundingBox.max.z = elem.z;
+                if(elem.z < this.boundingBox.min.z)
+                    this.boundingBox.min.z = elem.z;
+            });
+        }
+
+        this.boundingSphere.center.copy(this.boundingBox.min);
+        this.boundingSphere.center.add(this.boundingBox.max);
+        this.boundingSphere.center.multiplyScalar(0.5);
+        this.boundingSphere.radius = 0;
+        if(typeof vertices[0] === 'number')
+        {
+            const vArray = vertices as number[];
+            for(let i=0; i < vArray.length; i+=3)
+            {
+                const distance = Math.sqrt(
+                    (vArray[i] - this.boundingSphere.center.x) * (vArray[i] - this.boundingSphere.center.x) +
+                    (vArray[i+1] - this.boundingSphere.center.y) * (vArray[i+1] - this.boundingSphere.center.y) +
+                    (vArray[i+2] - this.boundingSphere.center.z) * (vArray[i+2] - this.boundingSphere.center.z)
+                );
+                
+                if(distance > this.boundingSphere.radius)
+                    this.boundingSphere.radius = distance;
+            }
+        }
+        else
+        {
+            (vertices as Vector3[]).forEach((elem : Vector3) =>
+            {
+                const distance = elem.distanceTo(this.boundingSphere.center);
+
+                if(distance > this.boundingSphere.radius)
+                    this.boundingSphere.radius = distance;
+            });
+        }
     }
 }

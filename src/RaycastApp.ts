@@ -9,6 +9,7 @@ export class RaycastApp extends gfx.GraphicsApp
     private marker: gfx.SphereMesh;
 
     private testMesh: gfx.Mesh;
+    private testMeshBounds: gfx.MeshInstance;
 
     constructor()
     {
@@ -21,6 +22,7 @@ export class RaycastApp extends gfx.GraphicsApp
         this.marker = new gfx.SphereMesh(0.1);
 
         this.testMesh = gfx.ObjLoader.load('./assets/bunny.obj');
+        this.testMeshBounds = new gfx.MeshInstance(this.testMesh);
     }
 
     createScene(): void 
@@ -52,7 +54,11 @@ export class RaycastApp extends gfx.GraphicsApp
         testMaterial.specularColor.set(1, 1, 1);
 
         this.testMesh.material = testMaterial;
+        //this.testMesh.rotation.setRotationY(-Math.PI / 2)
         this.scene.add(this.testMesh);
+
+        this.testMeshBounds.material = new gfx.BoundingVolumeMaterial(gfx.BoundingVolumeMode.BOX);
+        this.testMesh.add(this.testMeshBounds);
 
         const lineMaterial = new gfx.UnlitMaterial();
         lineMaterial.color.set(1, 0, 1);
@@ -85,7 +91,7 @@ export class RaycastApp extends gfx.GraphicsApp
         this.line.visible = true;
         this.line.position.copy(raycaster.ray.origin);
         this.line.lookAt(gfx.Vector3.add(raycaster.ray.origin, raycaster.ray.direction));
-        this.line.translateZ(this.line.depth / -2 - 1);
+        this.line.translateZ(this.line.depth / -2 - 0.5);
 
         // Set the ray cast marker to invisible by default
         this.marker.visible = false;
