@@ -159,6 +159,14 @@ export class Raycaster
     // Brute force intersection test
     intersectsMesh(mesh: Mesh): Vector3 | null
     { 
+        // If we do not intersect the bounding box, then there is no
+        // need to load the vertices from GPU memory and conduct
+        // an intersection test with each triangle in the mesh.
+        if(!this.intersectsMeshBoundingBox(mesh))
+            return null;
+
+        console.log('hi')
+
         const vertices = mesh.getVertices();
         const indices = mesh.getIndices();
 
