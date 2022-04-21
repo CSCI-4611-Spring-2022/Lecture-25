@@ -162,16 +162,24 @@ export class Raycaster
         const vertices = mesh.getVertices();
         const indices = mesh.getIndices();
 
+        // Compute the ray in object space
+        const localRay = new Ray(this.ray.origin.clone(), this.ray.direction.clone());
+        localRay.origin.applyMatrix(mesh.getWorldMatrix().inverse());
+        localRay.direction.rotate(mesh.rotation.inverse());
+
         const results = [];
         for(let i=0; i < indices.length; i+=3)
         {
-            const intersection = this.intersectsTriangle(
+            const intersection = this.intersectsTriangle(localRay,
                 new Vector3(vertices[indices[i]*3], vertices[indices[i]*3+1], vertices[indices[i]*3+2]),
                 new Vector3(vertices[indices[i+1]*3], vertices[indices[i+1]*3+1], vertices[indices[i+1]*3+2]),
                 new Vector3(vertices[indices[i+2]*3], vertices[indices[i+2]*3+1], vertices[indices[i+2]*3+2])
             );
             if(intersection)
+            {
+                intersection.applyMatrix(mesh.getWorldMatrix());
                 results.push(intersection);
+            }
         }
 
         if(results.length == 0)
@@ -198,13 +206,13 @@ export class Raycaster
 
     // Implementation of the Möller–Trumbore intersection algorithm
     // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): Vector3 | null
+    intersectsTriangle(ray: Ray, vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): Vector3 | null
     {
         const EPSILON = 0.0000001;
 
         const edge1 = Vector3.subtract(vertex1, vertex0);
         const edge2 = Vector3.subtract(vertex2, vertex0);
-        const h = Vector3.cross(this.ray.direction, edge2);
+        const h = Vector3.cross(ray.direction, edge2);
         const a = edge1.dot(h);
     
         if (a > -EPSILON && a < EPSILON) 
@@ -214,7 +222,7 @@ export class Raycaster
         }
 
         const f = 1.0 / a;
-        const s = Vector3.subtract(this.ray.origin, vertex0);
+        const s = Vector3.subtract(ray.origin, vertex0);
         const u = f * (s.dot(h));
         if (u < 0.0 || u > 1.0)
         {
@@ -222,7 +230,7 @@ export class Raycaster
         }
 
         const q = Vector3.cross(s, edge1);
-        const v = f * this.ray.direction.dot(q);
+        const v = f * ray.direction.dot(q);
         if (v < 0.0 || u + v > 1.0) 
         {
             return null;
@@ -234,9 +242,9 @@ export class Raycaster
         // ray intersection
         if (t > EPSILON) 
         {
-            const intersection = this.ray.direction.clone();
+            const intersection = ray.direction.clone();
             intersection.multiplyScalar(t);
-            intersection.add(this.ray.origin);
+            intersection.add(ray.origin);
             return intersection;
         }
 
