@@ -138,11 +138,21 @@ export class Raycaster
 
     intersectsMeshBoundingBox(mesh: Mesh): Vector3 | null
     {
-        return null;
+        const box = new Box();
+        box.min.copy(mesh.boundingBox.min);
+        box.max.copy(mesh.boundingBox.max);
+        box.min.applyMatrix(mesh.getWorldMatrix());
+        box.max.applyMatrix(mesh.getWorldMatrix()); 
+        return this.intersectsBox(box);
     }
 
     intersectsMeshBoundingSphere(mesh: Mesh): Vector3 | null
     {
-        return null;
+        const sphere = new Sphere();
+        sphere.radius = mesh.boundingSphere.radius;
+        sphere.center.copy(mesh.boundingSphere.center);
+        sphere.center.applyMatrix(mesh.getWorldMatrix());
+
+        return this.intersectsSphere(sphere);
     }
 }

@@ -19,7 +19,7 @@ export class RaycastApp extends gfx.GraphicsApp
         this.sky = new gfx.SphereMesh(500);
 
         this.line = new gfx.BoxMesh(0.01, 0.01, 100);
-        this.marker = new gfx.SphereMesh(0.1);
+        this.marker = new gfx.SphereMesh(0.05);
 
         this.testMesh = gfx.ObjLoader.load('./assets/bunny.obj');
         this.testMeshBounds = new gfx.MeshInstance(this.testMesh);
@@ -54,6 +54,7 @@ export class RaycastApp extends gfx.GraphicsApp
         testMaterial.specularColor.set(1, 1, 1);
 
         this.testMesh.material = testMaterial;
+        //this.testMesh.translateY(1);
         //this.testMesh.rotation.setRotationY(-Math.PI / 2)
         this.scene.add(this.testMesh);
 
@@ -95,6 +96,15 @@ export class RaycastApp extends gfx.GraphicsApp
 
         // Set the ray cast marker to invisible by default
         this.marker.visible = false;
+
+        // Ray cast to the mesh
+        const meshIntersection = raycaster.intersectsMeshBoundingBox(this.testMesh);
+        if(meshIntersection)
+        {
+            this.marker.position.copy(meshIntersection);
+            this.marker.visible = true;
+            return;
+        }
 
         // Ray cast to the ground plane
         const plane = new gfx.Plane(this.ground.position, gfx.Vector3.UP);
