@@ -301,7 +301,7 @@ export class Mesh extends Transform
     {
         if(!vertices)
         {
-            vertices = this.getArrayBuffer(this.positionBuffer);
+            vertices = this.getVertices();
         } 
         
         if(vertices.length == 0)

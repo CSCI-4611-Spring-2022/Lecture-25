@@ -54,8 +54,8 @@ export class RaycastApp extends gfx.GraphicsApp
         testMaterial.specularColor.set(1, 1, 1);
 
         this.testMesh.material = testMaterial;
-        //this.testMesh.translateY(1);
-        //this.testMesh.rotation.setRotationY(-Math.PI / 2)
+        this.testMesh.translateY(1);
+        this.testMesh.rotation.setRotationY(-Math.PI / 2)
         this.scene.add(this.testMesh);
 
         this.testMeshBounds.material = new gfx.BoundingVolumeMaterial(gfx.BoundingVolumeMode.BOX);
@@ -98,7 +98,7 @@ export class RaycastApp extends gfx.GraphicsApp
         this.marker.visible = false;
 
         // Ray cast to the mesh
-        const meshIntersection = raycaster.intersectsMeshBoundingBox(this.testMesh);
+        const meshIntersection = raycaster.intersectsMesh(this.testMesh);
         if(meshIntersection)
         {
             this.marker.position.copy(meshIntersection);

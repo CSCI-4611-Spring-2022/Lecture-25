@@ -155,4 +155,91 @@ export class Raycaster
 
         return this.intersectsSphere(sphere);
     }
+
+    // Brute force intersection test
+    intersectsMesh(mesh: Mesh): Vector3 | null
+    { 
+        const vertices = mesh.getVertices();
+        const indices = mesh.getIndices();
+
+        const results = [];
+        for(let i=0; i < indices.length; i+=3)
+        {
+            const intersection = this.intersectsTriangle(
+                new Vector3(vertices[indices[i]*3], vertices[indices[i]*3+1], vertices[indices[i]*3+2]),
+                new Vector3(vertices[indices[i+1]*3], vertices[indices[i+1]*3+1], vertices[indices[i+1]*3+2]),
+                new Vector3(vertices[indices[i+2]*3], vertices[indices[i+2]*3+1], vertices[indices[i+2]*3+2])
+            );
+            if(intersection)
+                results.push(intersection);
+        }
+
+        if(results.length == 0)
+        {
+            return null;
+        }
+        else
+        {
+            let closestPoint = 0;
+            let closestDistance = this.ray.origin.distanceTo(results[0]);
+            for(let i=1; i < results.length; i++)
+            {
+                const distance = this.ray.origin.distanceTo(results[i]);
+                if(distance < closestDistance)
+                {
+                    closestPoint = i;
+                    closestDistance = distance;
+                }
+            }
+
+            return results[closestPoint];
+        }
+    }
+
+    // Implementation of the Möller–Trumbore intersection algorithm
+    // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+    intersectsTriangle(vertex0: Vector3, vertex1: Vector3, vertex2: Vector3): Vector3 | null
+    {
+        const EPSILON = 0.0000001;
+
+        const edge1 = Vector3.subtract(vertex1, vertex0);
+        const edge2 = Vector3.subtract(vertex2, vertex0);
+        const h = Vector3.cross(this.ray.direction, edge2);
+        const a = edge1.dot(h);
+    
+        if (a > -EPSILON && a < EPSILON) 
+        {
+            // This ray is parallel to this triangle.
+            return null;    
+        }
+
+        const f = 1.0 / a;
+        const s = Vector3.subtract(this.ray.origin, vertex0);
+        const u = f * (s.dot(h));
+        if (u < 0.0 || u > 1.0)
+        {
+            return null;
+        }
+
+        const q = Vector3.cross(s, edge1);
+        const v = f * this.ray.direction.dot(q);
+        if (v < 0.0 || u + v > 1.0) 
+        {
+            return null;
+        }
+
+        // At this stage we can compute t to find out where the intersection point is on the line.
+        const t = f * edge2.dot(q);
+
+        // ray intersection
+        if (t > EPSILON) 
+        {
+            const intersection = this.ray.direction.clone();
+            intersection.multiplyScalar(t);
+            intersection.add(this.ray.origin);
+            return intersection;
+        }
+
+        return null;
+    }
 }
